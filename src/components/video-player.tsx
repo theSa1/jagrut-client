@@ -354,17 +354,87 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   }, [playbackSpeed]);
 
-  // Add keyboard event listener for fullscreen when dialog is open
+  // Add keyboard event listener for fullscreen and skip controls when dialog is open
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyPress = (event: KeyboardEvent) => {
-      if ((event.key === "f" || event.key === "F") && playerRef.current) {
+      if (!playerRef.current) return;
+
+      // Fullscreen toggle with 'f' key
+      if (event.key === "f" || event.key === "F") {
         event.preventDefault();
         if (playerRef.current.isFullscreen()) {
           playerRef.current.exitFullscreen();
         } else {
           playerRef.current.requestFullscreen();
+        }
+      }
+
+      // Play/pause toggle with spacebar
+      if (event.key === " " || event.key === "Spacebar") {
+        event.preventDefault();
+        if (playerRef.current.paused()) {
+          playerRef.current.play();
+        } else {
+          playerRef.current.pause();
+        }
+      }
+
+      // Decrease playback speed with Shift+, (Shift+<)
+      if (event.key === "<" && event.shiftKey) {
+        event.preventDefault();
+        const currentRate = playerRef.current.playbackRate();
+        if (typeof currentRate === "number") {
+          const speeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+          const currentIndex = speeds.findIndex(
+            (speed) => Math.abs(speed - currentRate) < 0.01
+          );
+          if (currentIndex > 0) {
+            const newSpeed = speeds[currentIndex - 1];
+            playerRef.current.playbackRate(newSpeed);
+            setPlaybackSpeed(newSpeed);
+            savePlaybackSpeed(newSpeed);
+          }
+        }
+      }
+
+      // Increase playback speed with Shift+. (Shift+>)
+      if (event.key === ">" && event.shiftKey) {
+        event.preventDefault();
+        const currentRate = playerRef.current.playbackRate();
+        if (typeof currentRate === "number") {
+          const speeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+          const currentIndex = speeds.findIndex(
+            (speed) => Math.abs(speed - currentRate) < 0.01
+          );
+          if (currentIndex >= 0 && currentIndex < speeds.length - 1) {
+            const newSpeed = speeds[currentIndex + 1];
+            playerRef.current.playbackRate(newSpeed);
+            setPlaybackSpeed(newSpeed);
+            savePlaybackSpeed(newSpeed);
+          }
+        }
+      }
+
+      // Skip forward 10 seconds with right arrow key
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        const currentTime = playerRef.current.currentTime();
+        const duration = playerRef.current.duration();
+        if (typeof currentTime === "number" && typeof duration === "number") {
+          const newTime = Math.min(currentTime + 10, duration);
+          playerRef.current.currentTime(newTime);
+        }
+      }
+
+      // Skip backward 10 seconds with left arrow key
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        const currentTime = playerRef.current.currentTime();
+        if (typeof currentTime === "number") {
+          const newTime = Math.max(currentTime - 10, 0);
+          playerRef.current.currentTime(newTime);
         }
       }
     };

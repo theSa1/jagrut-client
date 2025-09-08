@@ -33,51 +33,55 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   VideoPlayer,
-  isVideoWatched,
   getVideoProgress,
   formatTime,
 } from "@/components/video-player";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { decrypt } from "@/lib/decrypt";
 
 export const FolderItem = ({
   item,
   courseId,
   onVideoClick,
+  refreshTrigger,
 }: {
   item: Awaited<ReturnType<typeof fetchFolderContents>>["data"][0];
   courseId: string;
   onVideoClick: (videoId: string, videoTitle: string) => void;
+  refreshTrigger?: number;
 }) => {
   const navigate = useNavigate();
+  const [videoProgress, setVideoProgress] = useState(
+    item.material_type === "VIDEO" ? getVideoProgress(item.id, courseId) : null
+  );
 
-  const getIcon = () => {
-    switch (item.material_type) {
-      case "FOLDER":
-        return <Folder className="h-5 w-5 text-primary" />;
-      case "VIDEO":
-        const isWatched = isVideoWatched(item.id, courseId);
-        return isWatched ? (
-          <CheckCircle className="h-5 w-5 text-green-600" />
-        ) : (
-          <Play className="h-5 w-5 text-primary" />
-        );
-      case "PDF":
-        return <FileText className="h-5 w-5 text-destructive" />;
-      case "IMAGE":
-        return <FileImage className="h-5 w-5 text-primary" />;
-      default:
-        return <File className="h-5 w-5 text-muted-foreground" />;
+  useEffect(() => {
+    if (item.material_type === "VIDEO") {
+      setVideoProgress(getVideoProgress(item.id, courseId));
     }
-  };
+  }, [refreshTrigger, item.id, courseId]);
+
+  const Icon =
+    item.material_type === "FOLDER" ? (
+      <Folder className="h-5 w-5 text-primary" />
+    ) : item.material_type === "VIDEO" ? (
+      videoProgress?.isCompleted ? (
+        <CheckCircle className="h-5 w-5 text-green-600" />
+      ) : (
+        <Play className="h-5 w-5 text-primary" />
+      )
+    ) : item.material_type === "PDF" ? (
+      <FileText className="h-5 w-5 text-destructive" />
+    ) : item.material_type === "IMAGE" ? (
+      <FileImage className="h-5 w-5 text-primary" />
+    ) : (
+      <File className="h-5 w-5 text-muted-foreground" />
+    );
 
   const getVideoProgressInfo = () => {
-    if (item.material_type !== "VIDEO") return null;
+    if (item.material_type !== "VIDEO" || !videoProgress) return null;
 
-    const progress = getVideoProgress(item.id, courseId);
-    if (!progress) return null;
-
-    if (progress.isCompleted) {
+    if (videoProgress.isCompleted) {
       return (
         <Badge
           variant="secondary"
@@ -88,9 +92,9 @@ export const FolderItem = ({
       );
     }
 
-    if (progress.currentTime > 10) {
+    if (videoProgress.currentTime > 10) {
       const progressPercent = Math.round(
-        (progress.currentTime / progress.duration) * 100
+        (videoProgress.currentTime / videoProgress.duration) * 100
       );
       return (
         <div className="flex items-center gap-2">
@@ -99,7 +103,8 @@ export const FolderItem = ({
             {progressPercent}%
           </Badge>
           <span className="text-xs text-muted-foreground">
-            {formatTime(progress.currentTime)} / {formatTime(progress.duration)}
+            {formatTime(videoProgress.currentTime)} /{" "}
+            {formatTime(videoProgress.duration)}
           </span>
         </div>
       );
@@ -125,7 +130,7 @@ export const FolderItem = ({
     <div className="cursor-pointer p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          {getIcon()}
+          {Icon}
           <div className="flex-1">
             <h3 className="font-medium text-foreground transition-colors">
               {item.Title}
@@ -157,19 +162,22 @@ export const FolderList = ({
   folderData,
   courseId,
   onVideoClick,
+  refreshTrigger,
 }: {
   folderData: Awaited<ReturnType<typeof fetchFolderContents>>["data"];
   courseId: string;
   onVideoClick: (videoId: string, videoTitle: string) => void;
+  refreshTrigger?: number;
 }) => {
   return (
     <div className="space-y-3">
       {folderData.map((item) => (
         <FolderItem
-          key={item.id}
+          key={`${item.id}-${refreshTrigger}`}
           item={item}
           courseId={courseId}
           onVideoClick={onVideoClick}
+          refreshTrigger={refreshTrigger}
         />
       ))}
     </div>
@@ -182,6 +190,7 @@ const Page = () => {
     videoId: string;
     videoTitle: string;
   } | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0); // Force re-render to update progress
 
   const folder = useQuery({
     queryKey: ["folder", courseId, folderId],
@@ -198,6 +207,7 @@ const Page = () => {
 
   const handleVideoClose = () => {
     setSelectedVideo(null);
+    setRefreshKey((prev) => prev + 1); // Force re-render to update video progress
   };
 
   if (folder.isLoading || parentFolders.isLoading) {
@@ -344,9 +354,11 @@ const Page = () => {
           </Card>
         ) : (
           <FolderList
+            key={refreshKey}
             folderData={folderData}
             courseId={courseId!}
             onVideoClick={handleVideoClick}
+            refreshTrigger={refreshKey}
           />
         )}
       </div>

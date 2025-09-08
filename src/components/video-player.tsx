@@ -34,7 +34,7 @@ interface VideoProgress {
 }
 
 // Local storage utilities for video progress
-const getVideoProgress = (
+export const getVideoProgress = (
   videoId: string,
   courseId: string
 ): VideoProgress | null => {
@@ -59,11 +59,6 @@ const saveVideoProgress = (progress: VideoProgress): void => {
   }
 };
 
-const isVideoWatched = (videoId: string, courseId: string): boolean => {
-  const progress = getVideoProgress(videoId, courseId);
-  return progress?.isCompleted || false;
-};
-
 // Playback speed persistence utilities
 const getPlaybackSpeed = (): number => {
   try {
@@ -83,7 +78,7 @@ const savePlaybackSpeed = (speed: number): void => {
 };
 
 // Format time in MM:SS or HH:MM:SS format
-const formatTime = (seconds: number): string => {
+export const formatTime = (seconds: number): string => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
@@ -554,6 +549,3 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     </Dialog>
   );
 };
-
-// Export utility functions for use in other components
-export { isVideoWatched, getVideoProgress, formatTime };

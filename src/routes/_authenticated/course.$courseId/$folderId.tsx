@@ -137,6 +137,7 @@ export const FolderItem = ({
             </h3>
             <p className="text-sm text-muted-foreground">
               {new Date(item.event_date).toLocaleString("en-IN")}
+              {item.duration ? ` • ${item.duration}` : ""}
             </p>
             {getVideoProgressInfo()}
           </div>

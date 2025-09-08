@@ -109,6 +109,7 @@ export const fetchFolderContents = async (
       material_type: string;
       download_link: string;
       event_date: string;
+      duration?: string;
     }[];
   };
 

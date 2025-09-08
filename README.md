@@ -6,6 +6,31 @@ This is an alternative client for Jagrut Awaz, built using React and TypeScript.
 
 You must override the Referrer header in your browser to `https://streamos.teachx.in/` in order to watch videos. You can use browser extensions like "ModHeader" to achieve this.
 
+### ModHeader Import
+
+```json
+[
+  {
+    "headers": [
+      {
+        "appendMode": false,
+        "enabled": true,
+        "name": "Referer",
+        "value": "https://streamos.teachx.in/"
+      }
+    ],
+    "initiatorDomainFilters": [
+      { "domain": "transcoded-videos.classx.co.in", "enabled": true },
+      { "domain": "static-db-v2.appx.co.in", "enabled": true },
+      { "domain": "static-mc-v2.appx.co.in", "enabled": true }
+    ],
+    "shortTitle": "1",
+    "title": "Jagrut Awaz",
+    "version": 2
+  }
+]
+```
+
 ## Disclaimer
 
 - This project is not affiliated with or endorsed by Jagrut Awaz. It is an independent project created for educational purposes only. Use it at your own risk.

@@ -24,7 +24,7 @@ You must override the Referrer header in your browser to `https://streamos.teach
       { "domain": "static-db-v2.appx.co.in", "enabled": true },
       { "domain": "static-mc-v2.appx.co.in", "enabled": true }
     ],
-    "shortTitle": "1",
+    "shortTitle": "JA",
     "title": "Jagrut Awaz",
     "version": 2
   }

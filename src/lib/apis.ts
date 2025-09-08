@@ -108,6 +108,7 @@ export const fetchFolderContents = async (
       Title: string;
       material_type: string;
       download_link: string;
+      event_date: string;
     }[];
   };
 
@@ -133,7 +134,14 @@ export const fetchParentFolders = async (
     }[];
   };
 
-  return data;
+  const currentFolderRes = await fetchFolderContents(data.data[0].id, courseId);
+
+  const currentFolder = currentFolderRes.data.find((f) => f.id === folderId);
+
+  return {
+    parent: data.data[0],
+    current: currentFolder || null,
+  };
 };
 
 export const fetchVideoDetails = async (videoId: string, courseId: string) => {

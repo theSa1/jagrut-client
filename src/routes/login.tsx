@@ -55,14 +55,14 @@ const Page = () => {
         {/* Logo and Header */}
         <div className="text-center">
           <div className="flex justify-center">
-            <div className="p-3 bg-blue-600 rounded-full">
-              <BookOpen className="h-8 w-8 text-white" />
+            <div className="p-3 bg-primary rounded-full">
+              <BookOpen className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <h2 className="mt-4 text-3xl font-bold text-gray-900">
+          <h2 className="mt-4 text-3xl font-bold text-foreground">
             Welcome to Jagrut
           </h2>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-muted-foreground">
             Sign in to continue your learning journey
           </p>
         </div>
@@ -83,7 +83,7 @@ const Page = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-700">
+                      <FormLabel className="text-foreground">
                         Email address
                       </FormLabel>
                       <FormControl>
@@ -103,7 +103,9 @@ const Page = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-700">Password</FormLabel>
+                      <FormLabel className="text-foreground">
+                        Password
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Enter your password"
@@ -118,7 +120,7 @@ const Page = () => {
                 />
                 <Button
                   type="submit"
-                  className="w-full h-11 bg-blue-600 hover:bg-blue-700"
+                  className="w-full h-11 bg-primary hover:bg-primary/90"
                   disabled={form.formState.isSubmitting}
                 >
                   {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
@@ -129,7 +131,7 @@ const Page = () => {
         </Card>
 
         {/* Footer */}
-        <div className="text-center text-sm text-gray-500">
+        <div className="text-center text-sm text-muted-foreground">
           <p>Continue your learning with Jagrut</p>
         </div>
       </div>

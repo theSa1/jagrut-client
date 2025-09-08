@@ -1,6 +1,11 @@
 import { fetchFolderContents, fetchParentFolders } from "@/lib/apis";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useNavigate,
+} from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,144 +25,156 @@ import {
   ArrowLeft,
   BookOpen,
   FolderOpen,
+  FileImage,
+  File,
+  CheckCircle,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { VideoPlayer } from "@/components/VideoPlayer";
+import {
+  VideoPlayer,
+  isVideoWatched,
+  getVideoProgress,
+  formatTime,
+} from "@/components/video-player";
 import { useState } from "react";
 import { decrypt } from "@/lib/decrypt";
 
-const ContentItem = ({
+export const FolderItem = ({
   item,
   courseId,
   onVideoClick,
 }: {
-  item: any;
+  item: Awaited<ReturnType<typeof fetchFolderContents>>["data"][0];
   courseId: string;
   onVideoClick: (videoId: string, videoTitle: string) => void;
 }) => {
+  const navigate = useNavigate();
+
   const getIcon = () => {
     switch (item.material_type) {
       case "FOLDER":
-        return <Folder className="h-5 w-5 text-blue-600" />;
+        return <Folder className="h-5 w-5 text-primary" />;
       case "VIDEO":
-        return <Play className="h-5 w-5 text-green-600" />;
+        const isWatched = isVideoWatched(item.id, courseId);
+        return isWatched ? (
+          <CheckCircle className="h-5 w-5 text-green-600" />
+        ) : (
+          <Play className="h-5 w-5 text-primary" />
+        );
+      case "PDF":
+        return <FileText className="h-5 w-5 text-destructive" />;
+      case "IMAGE":
+        return <FileImage className="h-5 w-5 text-primary" />;
       default:
-        return <FileText className="h-5 w-5 text-gray-600" />;
+        return <File className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
-  const getBadgeColor = () => {
-    switch (item.material_type) {
-      case "FOLDER":
-        return "bg-blue-100 text-blue-800";
-      case "VIDEO":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+  const getVideoProgressInfo = () => {
+    if (item.material_type !== "VIDEO") return null;
+
+    const progress = getVideoProgress(item.id, courseId);
+    if (!progress) return null;
+
+    if (progress.isCompleted) {
+      return (
+        <Badge
+          variant="secondary"
+          className="text-xs bg-green-100 text-green-800"
+        >
+          ✓ Completed
+        </Badge>
+      );
     }
-  };
 
-  if (item.material_type === "FOLDER") {
-    return (
-      <Link
-        to="/course/$courseId/$folderId"
-        params={{ courseId: courseId, folderId: item.id }}
-        className="group block"
-      >
-        <Card className="transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 border-l-4 border-l-blue-500">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                {getIcon()}
-                <div>
-                  <h3 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                    {item.Title}
-                  </h3>
-                  <p className="text-sm text-gray-500">Folder</p>
-                </div>
-              </div>
-              <Badge className={getBadgeColor()}>{item.material_type}</Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </Link>
-    );
-  }
-
-  if (item.material_type === "VIDEO") {
-    return (
-      <Card
-        className="transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 border-l-4 border-l-green-500 cursor-pointer"
-        onClick={() => onVideoClick(item.id, item.Title)}
-      >
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              {getIcon()}
-              <div>
-                <h3 className="font-medium text-gray-900 hover:text-green-600 transition-colors">
-                  {item.Title}
-                </h3>
-                <p className="text-sm text-gray-500">Video</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Badge className={getBadgeColor()}>{item.material_type}</Badge>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-green-600 hover:text-green-700"
-              >
-                <Play className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card
-      className="border-l-4 border-l-gray-300"
-      onClick={() => {
-        if (item.material_type === "PDF" && item.download_link) {
-          window.open(decrypt(item.download_link), "_blank");
-        }
-      }}
-    >
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            {getIcon()}
-            <div>
-              <h3 className="font-medium text-gray-900">{item.Title}</h3>
-              <p className="text-sm text-gray-500">{item.material_type}</p>
-            </div>
-          </div>
-          <Badge className={getBadgeColor()}>{item.material_type}</Badge>
+    if (progress.currentTime > 10) {
+      const progressPercent = Math.round(
+        (progress.currentTime / progress.duration) * 100
+      );
+      return (
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs">
+            <Clock className="h-3 w-3 mr-1" />
+            {progressPercent}%
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            {formatTime(progress.currentTime)} / {formatTime(progress.duration)}
+          </span>
         </div>
-      </CardContent>
-    </Card>
-  );
-};
+      );
+    }
 
-const ContentSkeleton = () => (
-  <Card>
-    <CardContent className="p-4">
+    return null;
+  };
+
+  const handleClick = () => {
+    if (item.material_type === "FOLDER") {
+      navigate({
+        to: "/course/$courseId/$folderId",
+        params: { courseId, folderId: item.id },
+      });
+    } else if (item.material_type === "VIDEO") {
+      onVideoClick(item.id, item.Title);
+    } else if (item.material_type === "PDF" && item.download_link) {
+      window.open(decrypt(item.download_link), "_blank");
+    }
+  };
+
+  const cardContent = (
+    <div className="cursor-pointer p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <Skeleton className="h-5 w-5" />
-          <div>
-            <Skeleton className="h-4 w-32 mb-1" />
-            <Skeleton className="h-3 w-16" />
+          {getIcon()}
+          <div className="flex-1">
+            <h3 className="font-medium text-foreground transition-colors">
+              {item.Title}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {new Date(item.event_date).toLocaleString("en-IN")}
+            </p>
+            {getVideoProgressInfo()}
           </div>
         </div>
-        <Skeleton className="h-6 w-16" />
       </div>
-    </CardContent>
-  </Card>
+    </div>
+  );
+
+  return <div onClick={handleClick}>{cardContent}</div>;
+};
+
+export const ContentSkeleton = () => (
+  <div className="flex items-center gap-4 p-4">
+    <Skeleton className="h-10 w-10 rounded-md" />
+    <div className="flex-1 space-y-2">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-2 w-1/2" />
+    </div>
+  </div>
 );
+
+export const FolderList = ({
+  folderData,
+  courseId,
+  onVideoClick,
+}: {
+  folderData: Awaited<ReturnType<typeof fetchFolderContents>>["data"];
+  courseId: string;
+  onVideoClick: (videoId: string, videoTitle: string) => void;
+}) => {
+  return (
+    <div className="space-y-3">
+      {folderData.map((item) => (
+        <FolderItem
+          key={item.id}
+          item={item}
+          courseId={courseId}
+          onVideoClick={onVideoClick}
+        />
+      ))}
+    </div>
+  );
+};
 
 const Page = () => {
   const { courseId, folderId } = Route.useParams();
@@ -208,19 +225,18 @@ const Page = () => {
   if (folder.error || parentFolders.error) {
     return (
       <div className="text-center py-12">
-        <div className="text-red-500 text-lg mb-2">Failed to load folder</div>
-        <p className="text-gray-600">Please try refreshing the page</p>
+        <div className="text-destructive text-lg mb-2">
+          Failed to load folder
+        </div>
+        <p className="text-muted-foreground">Please try refreshing the page</p>
       </div>
     );
   }
 
   const folderData = folder.data?.data || [];
-  const parentData = parentFolders.data?.data || [];
-  const currentFolderName =
-    parentData.length > 0
-      ? parentData[parentData.length - 1]?.title
-      : "Course Root";
-  const parentFolderId = parentData.length > 0 ? parentData[0]?.id : courseId;
+  const parentData = parentFolders.data?.parent;
+  const currentFolderName = parentFolders.data?.current?.Title || "Folder";
+  const parentFolderId = parentData?.id ?? courseId;
 
   return (
     <div className="space-y-6">
@@ -243,12 +259,26 @@ const Page = () => {
               </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
-          {parentData.length > 1 && (
+          {parentData && parentData.id !== courseId && (
             <>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbPage>...</BreadcrumbPage>
               </BreadcrumbItem>
+            </>
+          )}
+          {parentData && parentData.id !== courseId && (
+            <>
+              <BreadcrumbSeparator />
+              <Link
+                to="/course/$courseId/$folderId"
+                params={{ courseId, folderId: parentData.id }}
+              >
+                <BreadcrumbPage className="flex items-center">
+                  <FolderOpen className="h-4 w-4 mr-1" />
+                  {parentData.title}
+                </BreadcrumbPage>
+              </Link>
             </>
           )}
           <BreadcrumbSeparator />
@@ -265,14 +295,10 @@ const Page = () => {
       <div className="space-y-4">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <FolderOpen className="h-8 w-8 mr-3 text-blue-600" />
+            <h1 className="text-3xl font-bold text-foreground flex items-center">
+              <FolderOpen className="h-8 w-8 mr-3 text-primary" />
               {currentFolderName}
             </h1>
-            <Badge variant="secondary" className="w-fit">
-              <Folder className="h-3 w-3 mr-1" />
-              Folder
-            </Badge>
           </div>
 
           <Button variant="outline" asChild>
@@ -285,7 +311,7 @@ const Page = () => {
               className="flex items-center"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to {parentData[0]?.title || "Course"}
+              Go Back
             </Link>
           </Button>
         </div>
@@ -296,7 +322,7 @@ const Page = () => {
       {/* Folder Contents */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-foreground">
             Folder Contents
           </h2>
           <Badge variant="outline">
@@ -307,26 +333,21 @@ const Page = () => {
         {folderData.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
-              <FolderOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <FolderOpen className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 Empty folder
               </h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 This folder doesn't contain any items yet
               </p>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
-            {folderData.map((item: any) => (
-              <ContentItem
-                key={item.id}
-                item={item}
-                courseId={courseId!}
-                onVideoClick={handleVideoClick}
-              />
-            ))}
-          </div>
+          <FolderList
+            folderData={folderData}
+            courseId={courseId!}
+            onVideoClick={handleVideoClick}
+          />
         )}
       </div>
 
@@ -344,7 +365,9 @@ const Page = () => {
   );
 };
 
-export const Route = createFileRoute("/_authenticated/course/$courseId/$folderId")({
+export const Route = createFileRoute(
+  "/_authenticated/course/$courseId/$folderId"
+)({
   component: Page,
   beforeLoad: ({ params }) => {
     if (params.folderId === params.courseId) {

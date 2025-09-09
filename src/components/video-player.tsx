@@ -119,6 +119,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [savedProgress, setSavedProgress] = useState<VideoProgress | null>(
     null
   );
+  const [isSpacebarHeld, setIsSpacebarHeld] = useState(false);
+  const [originalSpeedBeforeHold, setOriginalSpeedBeforeHold] = useState<
+    number | null
+  >(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<ReturnType<typeof videojs> | null>(null);
   const progressSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -353,7 +357,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   useEffect(() => {
     if (!isOpen) return;
 
-    const handleKeyPress = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (!playerRef.current) return;
 
       // Fullscreen toggle with 'f' key
@@ -366,13 +370,26 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         }
       }
 
-      // Play/pause toggle with spacebar
+      // Handle spacebar - either play/pause or temporary speed boost
       if (event.key === " " || event.key === "Spacebar") {
         event.preventDefault();
+
+        // If already held, don't do anything (prevent repeat events)
+        if (isSpacebarHeld) return;
+
+        // Check if video is paused - if so, just play it
         if (playerRef.current.paused()) {
           playerRef.current.play();
-        } else {
-          playerRef.current.pause();
+          return;
+        }
+
+        // Video is playing - start speed boost
+        setIsSpacebarHeld(true);
+        const currentRate = playerRef.current.playbackRate();
+        if (typeof currentRate === "number") {
+          setOriginalSpeedBeforeHold(currentRate);
+          const boostedSpeed = Math.min(currentRate + 1, 3); // Cap at 3x speed
+          playerRef.current.playbackRate(boostedSpeed);
         }
       }
 
@@ -434,11 +451,32 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       }
     };
 
-    document.addEventListener("keydown", handleKeyPress);
-    return () => {
-      document.removeEventListener("keydown", handleKeyPress);
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (!playerRef.current) return;
+
+      // Handle spacebar release - restore original speed or pause
+      if (event.key === " " || event.key === "Spacebar") {
+        event.preventDefault();
+
+        if (isSpacebarHeld && originalSpeedBeforeHold !== null) {
+          // Restore original playback speed
+          playerRef.current.playbackRate(originalSpeedBeforeHold);
+          setIsSpacebarHeld(false);
+          setOriginalSpeedBeforeHold(null);
+        } else if (!isSpacebarHeld && !playerRef.current.paused()) {
+          // This was a quick tap while playing - pause the video
+          playerRef.current.pause();
+        }
+      }
     };
-  }, [isOpen]);
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keyup", handleKeyUp);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [isOpen, isSpacebarHeld, originalSpeedBeforeHold]);
 
   // Clean up on close
   useEffect(() => {

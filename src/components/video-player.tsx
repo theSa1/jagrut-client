@@ -126,6 +126,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<ReturnType<typeof videojs> | null>(null);
   const progressSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const spacebarTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     data: videoData,
@@ -370,27 +371,26 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         }
       }
 
-      // Handle spacebar - either play/pause or temporary speed boost
+      // Handle spacebar - quick tap = play/pause, hold = speed boost
       if (event.key === " " || event.key === "Spacebar") {
         event.preventDefault();
 
         // If already held, don't do anything (prevent repeat events)
         if (isSpacebarHeld) return;
 
-        // Check if video is paused - if so, just play it
-        if (playerRef.current.paused()) {
-          playerRef.current.play();
-          return;
-        }
-
-        // Video is playing - start speed boost
-        setIsSpacebarHeld(true);
-        const currentRate = playerRef.current.playbackRate();
-        if (typeof currentRate === "number") {
-          setOriginalSpeedBeforeHold(currentRate);
-          const boostedSpeed = Math.min(currentRate + 1, 3); // Cap at 3x speed
-          playerRef.current.playbackRate(boostedSpeed);
-        }
+        // Start a timeout to distinguish between tap and hold
+        spacebarTimeoutRef.current = setTimeout(() => {
+          // This is a hold - start speed boost if video is playing
+          if (playerRef.current && !playerRef.current.paused()) {
+            setIsSpacebarHeld(true);
+            const currentRate = playerRef.current.playbackRate();
+            if (typeof currentRate === "number") {
+              setOriginalSpeedBeforeHold(currentRate);
+              const boostedSpeed = Math.min(currentRate + 1, 3); // Cap at 3x speed
+              playerRef.current.playbackRate(boostedSpeed);
+            }
+          }
+        }, 300); // 300ms delay to distinguish tap vs hold
       }
 
       // Decrease playback speed with Shift+, (Shift+<)
@@ -454,18 +454,26 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const handleKeyUp = (event: KeyboardEvent) => {
       if (!playerRef.current) return;
 
-      // Handle spacebar release - restore original speed or pause
+      // Handle spacebar release
       if (event.key === " " || event.key === "Spacebar") {
         event.preventDefault();
 
-        if (isSpacebarHeld && originalSpeedBeforeHold !== null) {
-          // Restore original playback speed
+        // Clear the timeout if it's still pending (this was a quick tap)
+        if (spacebarTimeoutRef.current) {
+          clearTimeout(spacebarTimeoutRef.current);
+          spacebarTimeoutRef.current = null;
+
+          // This was a quick tap - toggle play/pause
+          if (playerRef.current.paused()) {
+            playerRef.current.play();
+          } else {
+            playerRef.current.pause();
+          }
+        } else if (isSpacebarHeld && originalSpeedBeforeHold !== null) {
+          // This was a hold - restore original playback speed
           playerRef.current.playbackRate(originalSpeedBeforeHold);
           setIsSpacebarHeld(false);
           setOriginalSpeedBeforeHold(null);
-        } else if (!isSpacebarHeld && !playerRef.current.paused()) {
-          // This was a quick tap while playing - pause the video
-          playerRef.current.pause();
         }
       }
     };
@@ -475,6 +483,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
+      
+      // Clean up spacebar timeout
+      if (spacebarTimeoutRef.current) {
+        clearTimeout(spacebarTimeoutRef.current);
+        spacebarTimeoutRef.current = null;
+      }
     };
   }, [isOpen, isSpacebarHeld, originalSpeedBeforeHold]);
 
@@ -483,6 +497,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (!isOpen && playerRef.current) {
       playerRef.current.dispose();
       playerRef.current = null;
+      
+      // Clean up spacebar state and timeout
+      if (spacebarTimeoutRef.current) {
+        clearTimeout(spacebarTimeoutRef.current);
+        spacebarTimeoutRef.current = null;
+      }
+      setIsSpacebarHeld(false);
+      setOriginalSpeedBeforeHold(null);
     }
   }, [isOpen]);
 

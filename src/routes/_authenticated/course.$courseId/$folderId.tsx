@@ -29,6 +29,8 @@ import {
   File,
   CheckCircle,
   Clock,
+  Download,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,7 +38,7 @@ import {
   getVideoProgress,
   formatTime,
 } from "@/components/video-player";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { decrypt } from "@/lib/decrypt";
 
 export const FolderItem = ({
@@ -51,6 +53,7 @@ export const FolderItem = ({
   refreshTrigger?: number;
 }) => {
   const navigate = useNavigate();
+  const [isDownloading, setIsDownloading] = useState(false);
   const [videoProgress, setVideoProgress] = useState(
     item.material_type === "VIDEO" ? getVideoProgress(item.id, courseId) : null
   );
@@ -126,6 +129,31 @@ export const FolderItem = ({
     }
   };
 
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (item.download_link) {
+      try {
+        setIsDownloading(true);
+        const url = decrypt(item.download_link);
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = item.Title;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+      } catch (error) {
+        console.error("Download failed:", error);
+        window.open(decrypt(item.download_link), "_blank");
+      } finally {
+        setIsDownloading(false);
+      }
+    }
+  };
+
   const cardContent = (
     <div className="cursor-pointer p-4">
       <div className="flex items-center justify-between">
@@ -142,6 +170,23 @@ export const FolderItem = ({
             {getVideoProgressInfo()}
           </div>
         </div>
+        {item.material_type !== "FOLDER" &&
+          item.material_type !== "VIDEO" &&
+          item.download_link && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleDownload}
+              className="shrink-0"
+              disabled={isDownloading}
+            >
+              {isDownloading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+            </Button>
+          )}
       </div>
     </div>
   );

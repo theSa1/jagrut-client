@@ -132,8 +132,7 @@ export const FolderItem = ({
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (item.download_link) {
-      const API_BASE_URL =
-        import.meta.env.VITE_API_PROXY_URL || "http://localhost:8787";
+      const API_BASE_URL = import.meta.env.VITE_API_PROXY_URL || "";
       const fileLink = `${API_BASE_URL}/download/${btoa(decrypt(item.download_link))}`;
       try {
         setIsDownloading(true);

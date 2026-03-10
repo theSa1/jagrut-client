@@ -146,8 +146,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (videoData?.data) {
       setAvailableQualities(
         videoData.data.download_links.map((l) => {
-          const API_BASE_URL =
-            import.meta.env.VITE_API_PROXY_URL || "http://localhost:8787";
+          const API_BASE_URL = import.meta.env.VITE_API_PROXY_URL || "";
           const isHls = l.path.split("?")[0].endsWith(".m3u8");
           return {
             quality: l.quality,

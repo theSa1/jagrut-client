@@ -38,7 +38,7 @@ export async function onRequest(context: {
   const originResponse = await fetch(originUrl, {
     method: request.method,
     headers: {
-      ...Object.fromEntries(request.headers),
+      // ...Object.fromEntries(request.headers),
       Referer: "https://streamos.teachx.in/",
     },
   });

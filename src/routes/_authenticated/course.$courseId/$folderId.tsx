@@ -55,7 +55,7 @@ export const FolderItem = ({
   const navigate = useNavigate();
   const [isDownloading, setIsDownloading] = useState(false);
   const [videoProgress, setVideoProgress] = useState(
-    item.material_type === "VIDEO" ? getVideoProgress(item.id, courseId) : null
+    item.material_type === "VIDEO" ? getVideoProgress(item.id, courseId) : null,
   );
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export const FolderItem = ({
 
     if (videoProgress.currentTime > 10) {
       const progressPercent = Math.round(
-        (videoProgress.currentTime / videoProgress.duration) * 100
+        (videoProgress.currentTime / videoProgress.duration) * 100,
       );
       return (
         <div className="flex items-center gap-2">
@@ -132,9 +132,12 @@ export const FolderItem = ({
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (item.download_link) {
+      const API_BASE_URL =
+        import.meta.env.VITE_API_PROXY_URL || "http://localhost:8787";
+      const fileLink = `${API_BASE_URL}/download/${btoa(decrypt(item.download_link))}`;
       try {
         setIsDownloading(true);
-        const url = decrypt(item.download_link);
+        const url = fileLink;
         const response = await fetch(url);
         const blob = await response.blob();
         const downloadUrl = window.URL.createObjectURL(blob);
@@ -147,7 +150,7 @@ export const FolderItem = ({
         window.URL.revokeObjectURL(downloadUrl);
       } catch (error) {
         console.error("Download failed:", error);
-        window.open(decrypt(item.download_link), "_blank");
+        window.open(fileLink, "_blank");
       } finally {
         setIsDownloading(false);
       }
@@ -424,7 +427,7 @@ const Page = () => {
 };
 
 export const Route = createFileRoute(
-  "/_authenticated/course/$courseId/$folderId"
+  "/_authenticated/course/$courseId/$folderId",
 )({
   component: Page,
   beforeLoad: ({ params }) => {

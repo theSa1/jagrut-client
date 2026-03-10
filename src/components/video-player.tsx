@@ -36,11 +36,11 @@ interface VideoProgress {
 // Local storage utilities for video progress
 export const getVideoProgress = (
   videoId: string,
-  courseId: string
+  courseId: string,
 ): VideoProgress | null => {
   try {
     const stored = localStorage.getItem(
-      `video_progress_${courseId}_${videoId}`
+      `video_progress_${courseId}_${videoId}`,
     );
     return stored ? JSON.parse(stored) : null;
   } catch {
@@ -52,7 +52,7 @@ const saveVideoProgress = (progress: VideoProgress): void => {
   try {
     localStorage.setItem(
       `video_progress_${progress.courseId}_${progress.videoId}`,
-      JSON.stringify(progress)
+      JSON.stringify(progress),
     );
   } catch (error) {
     console.error("Failed to save video progress:", error);
@@ -106,7 +106,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const [selectedQuality, setSelectedQuality] = useState<string>("auto");
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(() =>
-    getPlaybackSpeed()
+    getPlaybackSpeed(),
   );
   const [availableQualities, setAvailableQualities] = useState<
     Array<{
@@ -117,7 +117,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }>
   >([]);
   const [savedProgress, setSavedProgress] = useState<VideoProgress | null>(
-    null
+    null,
   );
   const [isSpacebarHeld, setIsSpacebarHeld] = useState(false);
   const [originalSpeedBeforeHold, setOriginalSpeedBeforeHold] = useState<
@@ -146,14 +146,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (videoData?.data) {
       setAvailableQualities(
         videoData.data.download_links.map((l) => {
+          const API_BASE_URL =
+            import.meta.env.VITE_API_PROXY_URL || "http://localhost:8787";
           const isHls = l.path.split("?")[0].endsWith(".m3u8");
           return {
             quality: l.quality,
             bitrate: parseInt(l.quality.replace("p", "")),
-            url: decrypt(l.path),
+            url: `${API_BASE_URL}/stream/${btoa(decrypt(l.path))}`,
             type: isHls ? "hls" : "mp4",
           };
-        }) || []
+        }) || [],
       );
     }
   }, [videoData]);
@@ -210,7 +212,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 "Current rate after setting:",
                 currentRate,
                 "Expected:",
-                savedSpeed
+                savedSpeed,
               );
               if (
                 typeof currentRate === "number" &&
@@ -240,7 +242,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                   "User changed speed from",
                   currentSpeed,
                   "to",
-                  newRate
+                  newRate,
                 );
                 setPlaybackSpeed(newRate);
                 savePlaybackSpeed(newRate);
@@ -400,7 +402,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         if (typeof currentRate === "number") {
           const speeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
           const currentIndex = speeds.findIndex(
-            (speed) => Math.abs(speed - currentRate) < 0.01
+            (speed) => Math.abs(speed - currentRate) < 0.01,
           );
           if (currentIndex > 0) {
             const newSpeed = speeds[currentIndex - 1];
@@ -418,7 +420,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         if (typeof currentRate === "number") {
           const speeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
           const currentIndex = speeds.findIndex(
-            (speed) => Math.abs(speed - currentRate) < 0.01
+            (speed) => Math.abs(speed - currentRate) < 0.01,
           );
           if (currentIndex >= 0 && currentIndex < speeds.length - 1) {
             const newSpeed = speeds[currentIndex + 1];
@@ -483,7 +485,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
-      
+
       // Clean up spacebar timeout
       if (spacebarTimeoutRef.current) {
         clearTimeout(spacebarTimeoutRef.current);
@@ -497,7 +499,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (!isOpen && playerRef.current) {
       playerRef.current.dispose();
       playerRef.current = null;
-      
+
       // Clean up spacebar state and timeout
       if (spacebarTimeoutRef.current) {
         clearTimeout(spacebarTimeoutRef.current);

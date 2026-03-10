@@ -144,7 +144,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   useEffect(() => {
     if (videoData?.data) {
-      setAvailableQualities(
+      const qualities =
         videoData.data.download_links.map((l) => {
           const API_BASE_URL = import.meta.env.VITE_API_PROXY_URL || "";
           const isHls = l.path.split("?")[0].endsWith(".m3u8");
@@ -152,12 +152,26 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             quality: l.quality,
             bitrate: parseInt(l.quality.replace("p", "")),
             url: `${API_BASE_URL}/stream/${btoa(decrypt(l.path))}`,
-            type: isHls ? "hls" : "mp4",
+            type: (isHls ? "hls" : "mp4") as "hls" | "mp4",
           };
-        }) || [],
-      );
+        }) || [];
+
+      setAvailableQualities(qualities);
+
+      // Set default quality to 720p if available, otherwise use first quality
+      const has720p = qualities.some((q) => q.quality === "720p");
+      if (has720p && selectedQuality === "auto") {
+        setSelectedQuality("720p");
+      } else if (!has720p && selectedQuality === "auto") {
+        setSelectedQuality(qualities[0]?.quality || "auto");
+      }
     }
-  }, [videoData]);
+  }, [videoData, selectedQuality]);
+
+  // Reset quality to auto when video changes
+  useEffect(() => {
+    setSelectedQuality("auto");
+  }, [videoId]);
 
   // Load saved progress when component mounts
   useEffect(() => {
@@ -168,7 +182,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   }, [videoId, courseId, isOpen]);
 
   const currentVideoUrl =
-    selectedQuality === "auto"
+    selectedQuality === "auto" || !selectedQuality
       ? availableQualities[0]?.url
       : availableQualities.find((q) => q.quality === selectedQuality)?.url ||
         availableQualities[0]?.url;

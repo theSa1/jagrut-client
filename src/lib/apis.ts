@@ -131,12 +131,24 @@ export const fetchParentFolders = async (
     }[];
   };
 
-  const currentFolderRes = await fetchFolderContents(data.data[0].id, courseId);
+  const parentFolder = data.data[0];
+
+  if (!parentFolder) {
+    const rootFolderRes = await fetchFolderContents(courseId, courseId);
+    const rootCurrentFolder = rootFolderRes.data.find((f) => f.id === folderId);
+
+    return {
+      parent: null,
+      current: rootCurrentFolder || null,
+    };
+  }
+
+  const currentFolderRes = await fetchFolderContents(parentFolder.id, courseId);
 
   const currentFolder = currentFolderRes.data.find((f) => f.id === folderId);
 
   return {
-    parent: data.data[0],
+    parent: parentFolder,
     current: currentFolder || null,
   };
 };

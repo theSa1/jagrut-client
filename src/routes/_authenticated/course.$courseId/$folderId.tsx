@@ -1,11 +1,6 @@
 import { fetchFolderContents, fetchParentFolders } from "@/lib/apis";
 import { useQuery } from "@tanstack/react-query";
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -293,7 +288,7 @@ const Page = () => {
 
   const folderData = folder.data?.data || [];
   const parentData = parentFolders.data?.parent;
-  const currentFolderName = parentFolders.data?.current?.Title || "Folder";
+  const currentFolderName = parentFolders.data?.current?.Title || "Home";
   const parentFolderId = parentData?.id ?? courseId;
 
   return (
@@ -429,12 +424,4 @@ export const Route = createFileRoute(
   "/_authenticated/course/$courseId/$folderId",
 )({
   component: Page,
-  beforeLoad: ({ params }) => {
-    if (params.folderId === params.courseId) {
-      throw redirect({
-        to: "/course/$courseId",
-        params: { courseId: params.courseId },
-      });
-    }
-  },
 });

@@ -32,7 +32,7 @@ const Page = () => {
   });
   const courseFolder = useQuery({
     queryKey: ["courseFolder", courseId, courseId],
-    queryFn: () => fetchFolderContents(courseId!, courseId!),
+    queryFn: () => fetchFolderContents("-1", courseId!),
   });
 
   const handleVideoClick = (videoId: string, videoTitle: string) => {

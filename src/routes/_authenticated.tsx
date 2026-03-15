@@ -30,30 +30,30 @@ const Layout = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo and Navigation */}
-            <div className="flex items-center space-x-8">
+            <div className="flex items-center space-x-4 sm:space-x-8">
               <Link to="/" className="flex items-center space-x-2">
-                <BookOpen className="h-8 w-8 text-primary" />
-                <span className="text-xl font-bold text-foreground">
+                <BookOpen className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+                <span className="text-lg sm:text-xl font-bold text-foreground">
                   Jagrut
                 </span>
               </Link>
 
-              <nav className="flex space-x-4">
+              <nav className="flex space-x-1">
                 <Link
                   to="/"
-                  className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
+                  className="flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
                 >
                   <Home className="h-4 w-4" />
-                  <span>Courses</span>
+                  <span className="hidden sm:inline">Courses</span>
                 </Link>
               </nav>
             </div>
 
             {/* User Profile */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <ModeToggle />
 
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
@@ -81,7 +81,7 @@ const Layout = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <Outlet />
       </main>
     </div>

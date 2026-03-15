@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#3b82f6"/>
+  <!-- Book open icon -->
+  <g transform="translate(80, 96)" stroke="white" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Left page -->
+    <path d="M176 32 C176 32 120 40 64 64 L64 288 C120 264 176 272 176 272 L176 32Z" fill="white" stroke="white"/>
+    <!-- Right page -->
+    <path d="M176 32 C176 32 232 40 288 64 L288 288 C232 264 176 272 176 272 L176 32Z" fill="rgba(255,255,255,0.7)" stroke="white"/>
+    <!-- Spine -->
+    <line x1="176" y1="32" x2="176" y2="272"/>
+  </g>
+</svg>

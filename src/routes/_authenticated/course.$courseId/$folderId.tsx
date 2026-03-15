@@ -152,15 +152,15 @@ export const FolderItem = ({
   };
 
   const cardContent = (
-    <div className="cursor-pointer p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          {Icon}
-          <div className="flex-1">
-            <h3 className="font-medium text-foreground transition-colors">
+    <div className="cursor-pointer p-3 sm:p-4">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center space-x-3 min-w-0 flex-1">
+          <div className="shrink-0">{Icon}</div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-medium text-foreground transition-colors line-clamp-2 sm:line-clamp-1">
               {item.Title}
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">
               {new Date(item.event_date).toLocaleString("en-IN")}
               {item.duration ? ` • ${item.duration}` : ""}
             </p>
@@ -346,15 +346,13 @@ const Page = () => {
 
       {/* Folder Header */}
       <div className="space-y-4">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-foreground flex items-center">
-              <FolderOpen className="h-8 w-8 mr-3 text-primary" />
-              {currentFolderName}
-            </h1>
-          </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center min-w-0">
+            <FolderOpen className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-primary shrink-0" />
+            <span className="truncate">{currentFolderName}</span>
+          </h1>
 
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="self-start shrink-0">
             <Link
               to="/course/$courseId/$folderId"
               params={{

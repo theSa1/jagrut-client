@@ -523,13 +523,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   }, [isOpen]);
 
+  const dialogClassName =
+    "w-[96vw] max-w-[96vw] p-3 sm:w-[85vw] sm:max-w-[85vw] sm:p-6 md:w-[80vw] md:max-w-[80vw]";
+
   if (isVideoLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="w-[80vw] !max-w-[80vw]">
+        <DialogContent className={dialogClassName}>
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
-              <Skeleton className="h-4 w-64" />
+              <Skeleton className="h-4 w-48 sm:w-64" />
             </DialogTitle>
           </DialogHeader>
           <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
@@ -543,7 +546,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   if (error || !videoData) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="w-[80vw] !max-w-[80vw]">
+        <DialogContent className={dialogClassName}>
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <AlertCircle className="h-5 w-5 text-destructive" />
@@ -568,12 +571,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[80vw] !max-w-[80vw]">
+      <DialogContent className={dialogClassName}>
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">
-            <div className="flex items-center justify-between">
-              <span>{videoData?.data?.Title || videoTitle}</span>
-            </div>
+          <DialogTitle className="text-sm sm:text-lg font-semibold pr-6">
+            <span className="line-clamp-2">
+              {videoData?.data?.Title || videoTitle}
+            </span>
           </DialogTitle>
         </DialogHeader>
 
@@ -588,12 +591,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
               {/* Custom Quality Selector */}
               {availableQualities.length > 1 && (
-                <div className="absolute top-4 right-4 z-10">
+                <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10">
                   <Select
                     value={selectedQuality}
                     onValueChange={setSelectedQuality}
                   >
-                    <SelectTrigger className="w-[100px] bg-black/80 text-white border-white/20">
+                    <SelectTrigger className="w-[72px] sm:w-[100px] h-7 sm:h-9 text-xs sm:text-sm bg-black/80 text-white border-white/20">
                       <SelectValue placeholder="Quality" />
                     </SelectTrigger>
                     <SelectContent className="bg-black/90 text-white border-white/20">

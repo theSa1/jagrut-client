@@ -102,14 +102,12 @@ const Page = () => {
 
       {/* Course Header */}
       <div className="space-y-4">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-foreground">
-              {courseData?.course_name}
-            </h1>
-          </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground min-w-0">
+            {courseData?.course_name}
+          </h1>
 
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="self-start shrink-0">
             <Link to="/" className="flex items-center">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Courses

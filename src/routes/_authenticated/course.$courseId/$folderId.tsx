@@ -120,7 +120,9 @@ export const FolderItem = ({
     } else if (item.material_type === "VIDEO") {
       onVideoClick(item.id, item.Title);
     } else if (item.material_type === "PDF" && item.download_link) {
-      window.open(decrypt(item.download_link), "_blank");
+      const API_BASE_URL = import.meta.env.VITE_API_PROXY_URL || "";
+      const fileLink = `${API_BASE_URL}/download/${btoa(decrypt(item.download_link))}`;
+      window.open(fileLink, "_blank");
     }
   };
 
